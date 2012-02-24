@@ -69,7 +69,7 @@ With a couple of aliases in DSL it enables you to deal with tariff plans. Plan a
 
   namespace "Review" do
 
-    privelege :edit, [:admin] do
+    privilege :edit, [:admin] do
       assert :owner, [:none]
     end
 

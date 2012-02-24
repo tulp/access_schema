@@ -1,7 +1,7 @@
 module AccessSchema
   class NamespaceBuilder < BasicBuilder
 
-    def privelege(name, roles, &block)
+    def privilege(name, roles, &block)
       element = Element.new(name.to_sym, roles.map(&:to_sym))
       if block_given?
         builder = ElementBuilder.new(element)
@@ -10,7 +10,7 @@ module AccessSchema
       schema.add_element(element)
     end
 
-    alias :feature :privelege
+    alias :feature :privilege
 
   end
 end
