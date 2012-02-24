@@ -1,9 +1,13 @@
-# AccessSchema gem - ACL for your app
+# AccessSchema gem - ACL/plans for your app
 
-AccessSchema provides you a tool to define ACL schema with simple DSL.
-With a couple of aliases id DSL it enables you to work with tariff plans.
+AccessSchema provides a tool to define ACL schema with simple DSL.
+Inspired by [ya_acl](https://github.com/kaize/ya_acl)
 
-Then idea is inspired by [ya_acl](https://github.com/kaize/ya_acl)
+With a couple of aliases in DSL it enables you to deal with tariff plans.
+
+```
+  gem install access_schema
+```
 
 ## An example of typical use
 
@@ -15,30 +19,6 @@ Then idea is inspired by [ya_acl](https://github.com/kaize/ya_acl)
   plan.allow? review, :add_photo
 
   plan.require! review, :mark_featured
-
-```
-
-```ruby
-  #access_schema_helper.rb
-
-  class AccessSchemaHelper
-
-    def plan
-      @plan ||= AccessSchema.build_file "config/plans.rb"
-      AccessSchema.with_options(@plan, {
-        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
-      })
-    end
-
-    def acl
-      @acl ||= AccessSchema.build_file "config/acl.rb"
-      AccessSchema.with_options(@acl, {
-        :role => current_user.try(:role) || :none,
-        :user_id => current_user.id
-      })
-    end
-
-  end
 
 ```
 
@@ -94,4 +74,29 @@ Then idea is inspired by [ya_acl](https://github.com/kaize/ya_acl)
     end
 
   end
+```
+
+
+```ruby
+  #access_schema_helper.rb
+
+  class AccessSchemaHelper
+
+    def plan
+      @plan ||= AccessSchema.build_file "config/plans.rb"
+      AccessSchema.with_options(@plan, {
+        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
+      })
+    end
+
+    def acl
+      @acl ||= AccessSchema.build_file "config/acl.rb"
+      AccessSchema.with_options(@acl, {
+        :role => current_user.try(:role) || :none,
+        :user_id => current_user.try(:id)
+      })
+    end
+
+  end
+
 ```
