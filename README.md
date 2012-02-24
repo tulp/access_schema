@@ -3,7 +3,7 @@
 AccessSchema provides a tool to define ACL schema with simple DSL.
 Inspired by [ya_acl](https://github.com/kaize/ya_acl)
 
-With a couple of aliases in DSL it enables you to deal with tariff plans.
+With a couple of aliases in DSL it enables you to deal with tariff plans. Plan and role, feature and privilege are synonyms.
 
 ```
   gem install access_schema
