@@ -1,7 +1,7 @@
 module AccessSchema
   class Proxy
 
-    def initialize(schema, options)
+    def initialize(schema, options = {})
       @schema = schema
       @options = options
     end
@@ -21,6 +21,10 @@ module AccessSchema
 
     def require!(*args)
       @schema.require!(*args)
+    end
+
+    def with_options(options)
+      Proxy.new(schema, options)
     end
 
   end

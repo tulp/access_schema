@@ -27,7 +27,7 @@ module AccessSchema
   end
 
   def self.with_options(schema, options)
-    Proxy.new(schema, options)
+    schema.with_options(options)
   end
 
   def self.configure(&block)
