@@ -1,6 +1,8 @@
 # AccessSchema gem - ACL/plans for your app
 
-AccessSchema provides a tool to define ACL schema with simple DSL.
+AccessSchema provides decoupled from Rails and ORM agnostic tool
+to define ACL schemas with realy simple DSL.
+
 Inspired by [ya_acl](https://github.com/kaize/ya_acl)
 
 With a couple of aliases in DSL it enables you to deal with tariff plans. Plan and role, feature and privilege are synonyms.
@@ -9,21 +11,102 @@ With a couple of aliases in DSL it enables you to deal with tariff plans. Plan a
   gem install access_schema
 ```
 
-## An example of typical use
+## An example of use
+
+
+### Accessing from application code
+
+In Rails controllers we usualy have a current_user and we can
+add some default options in helpers:
 
 ```ruby
-  #somewhere.rb
+  #access_schema_helper.rb
 
+  class AccessSchemaHelper
+
+    def plan
+      AccessSchema.schema(:plans).with_options({
+        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
+      })
+    end
+
+    def acl
+      AccessSchema.schema(:acl).with_options({
+        :role => current_user.try(:role) || :none,
+        :user_id => current_user.try(:id)
+      })
+    end
+
+  end
+
+```
+
+So at may be used in controllers:
+
+```ruby
   acl.require! review, :edit
-
-  plan.allow? review, :add_photo
-
   plan.require! review, :mark_featured
 
 ```
 
+Or views:
+
+```ruby
+  - if plan.allow? review, :add_photo
+    = render :partial => "add_photo"
+```
+
+
+On the ather side there are no any current_user accessible. In a Service Layer for
+example. So we have to pass extra options:
+
+
+```ruby
+  #./app/services/review_service.rb
+
+  class ReviewService < BaseSevice
+
+    def mark_featured(review_id, options)
+
+      review = Review.find(review_id)
+
+      acl = AccessSchema.schema(:acl).with_options(:role => options[:actor].roles)
+      acl.require! review, :mark_featured
+
+      plans = AccessSchema.schema(:plans).with_options(:plan => options[:actor].plan)
+      plans.require! review, :mark_featured
+
+      review.featured = true
+      review.save!
+
+    end
+
+    def update(review_id, attrs)
+
+      review = Review.find(review_id)
+
+      plans = AccessSchema.schema(:plans).with_options(:plan => options[:actor].plan)
+
+      plans.require!(review, :add_site_url) if attrs[:site_url].present?
+      plans.require!(review, :greeting_greeting) if attrs[:greeting].present?
+      # end 5 more checks
+
+      review.update_attributes(attrs)
+
+    end
+
+  end
+
+```
+
+
+
+### Definition
+
+
 ```ruby
   # config/plans.rb
+
   plans do
     plan :none
     plan :bulb
@@ -76,74 +159,21 @@ With a couple of aliases in DSL it enables you to deal with tariff plans. Plan a
   end
 ```
 
+## Configuration
+
+Configured schema can be accessed with AccessSchema.schema(name)
+anywhere in app. Alternatively it can be assempled with ServiceLocator.
+
 
 ```ruby
   #config/initializers/access_schema.rb
 
   AccessSchema.configure do
 
-    plans = AccessSchema.build_file('config/plans.rb')
-
-    define_schema :plans, plans
-    define_schema :acl,  AccessSchema.build_file('config/plans.rb').with_options({
-      :plans => plans
-    })
-
+    define_schema :plans, AccessSchema.build_file('config/plans.rb')
+    define_schema :acl, AccessSchema.build_file('config/acl.rb')
 
   end
-
-```
-
-```ruby
-  #access_schema_helper.rb
-
-  # We have current_user and we can preset some options to
-  # simplify checks in controlers/views
-
-  class AccessSchemaHelper
-
-    def plan
-      AccessSchema.schema(:plans).with_options({
-        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
-      })
-    end
-
-    def acl
-      AccessSchema.schema(:acl).with_options({
-        :role => current_user.try(:role) || :none,
-        :user_id => current_user.try(:id)
-      })
-    end
-
-  end
-
-```
-
-```ruby
-  #./app/services/review_service.rb
-
-  # Serivces can't use any current_user, so we have to
-  # pass some more options
-
-  class ReviewService < BaseSevice
-
-    def mark_featured(review_id, options)
-
-      review = Review.find(review_id)
-
-      acl.require! review, :mark_featured, {
-        :role => options[:actor].roles,
-        :plan => options[:actor].plan
-      }
-
-      review.featured = true
-      review.save!
-
-    end
-
-  end
-
-
 
 ```
 
