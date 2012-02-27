@@ -30,4 +30,12 @@ module AccessSchema
     Proxy.new(schema, options)
   end
 
+  def self.configure(&block)
+    @config = ConfigBuilder.build(&block)
+  end
+
+  def self.schema(name)
+    @config.schema(name)
+  end
+
 end
