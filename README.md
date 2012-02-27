@@ -117,8 +117,8 @@ example. So we have to pass extra options:
       subject.photos_count < limit
     end
 
-    assert :attrs, [:new_attrs, :allowed] do
-      ...
+    assert :attrs, [:new_attrs, :disallow] do
+      # check if any disallowed attributes are changing in subject with new_attrs
     end
 
   end
@@ -133,9 +133,14 @@ example. So we have to pass extra options:
       assert :photo_limit, [:flower], :limit => 10
     end
 
+    # Important fields from plans aspect:
+    #   greeting
+    #   logo
+    #   site_url
+    #
     feature :edit, [:bouquet] do
-      assert :attrs, [:bulb, flower], :allowed => [:greeting, :logo]
-      assert :attrs, [:flower], :allowed => [:site_url]
+      assert :attrs, [:bulb], :disallow => [:greeting, :logo, :site_url]
+      assert :attrs, [:flower], :disallow => [:site_url]
     end
 
   end
@@ -176,8 +181,8 @@ anywhere in app. Alternatively it can be assempled with ServiceLocator.
 
   AccessSchema.configure do
 
-    define_schema :plans, AccessSchema.build_file('config/plans.rb')
-    define_schema :acl, AccessSchema.build_file('config/acl.rb')
+    schema :plans, AccessSchema.build_file('config/plans.rb')
+    schema :acl, AccessSchema.build_file('config/acl.rb')
 
   end
 
