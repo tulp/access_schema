@@ -85,11 +85,11 @@ example. So we have to pass extra options:
 
       review = Review.find(review_id)
 
-      plans = AccessSchema.schema(:plans).with_options(:plan => options[:actor].plan)
+      acl = AccessSchema.schema(:acl).with_options(:role => options[:actor].roles)
+      acl.require! review, :edit
 
-      plans.require!(review, :add_site_url) if attrs[:site_url].present?
-      plans.require!(review, :greeting_greeting) if attrs[:greeting].present?
-      # end 5 more checks
+      plans = AccessSchema.schema(:plans).with_options(:plan => options[:actor].plan)
+      plans.require! review, :edit, :new_attrs => attrs
 
       review.update_attributes(attrs)
 
@@ -99,10 +99,7 @@ example. So we have to pass extra options:
 
 ```
 
-
-
 ### Definition
-
 
 ```ruby
   # config/plans.rb
@@ -120,6 +117,10 @@ example. So we have to pass extra options:
       subject.photos_count < limit
     end
 
+    assert :attrs, [:new_attrs, :allowed] do
+      ...
+    end
+
   end
 
   namespace "Review" do
@@ -130,6 +131,11 @@ example. So we have to pass extra options:
       assert :photo_limit, [:none], :limit => 1
       assert :photo_limit, [:bulb], :limit => 5
       assert :photo_limit, [:flower], :limit => 10
+    end
+
+    feature :edit, [:bouquet] do
+      assert :attrs, [:bulb, flower], :allowed => [:greeting, :logo]
+      assert :attrs, [:flower], :allowed => [:site_url]
     end
 
   end
