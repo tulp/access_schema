@@ -97,7 +97,7 @@ With a couple of aliases in DSL it enables you to deal with tariff plans. Plan a
 ```ruby
   #access_schema_helper.rb
 
-  # We hase current_user and we can preset some options to
+  # We have current_user and we can preset some options to
   # simplify checks in controlers/views
 
   class AccessSchemaHelper
