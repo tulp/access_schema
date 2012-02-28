@@ -6,6 +6,14 @@ module AccessSchema
       @options = options
     end
 
+    def roles
+      @schema.roles
+    end
+
+    def plans
+      @schema.plans
+    end
+
     def allow?(*args)
       namespace = args[0]
       feature = args[1]
@@ -24,7 +32,7 @@ module AccessSchema
     end
 
     def with_options(options)
-      Proxy.new(schema, options)
+      Proxy.new(@schema, options)
     end
 
   end
