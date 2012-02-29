@@ -1,11 +1,14 @@
 require 'access_schema/version'
 require 'access_schema/exceptions'
 
+require 'access_schema/config'
 require 'access_schema/schema'
 require 'access_schema/assert'
 require 'access_schema/namespace'
 require 'access_schema/element'
 require 'access_schema/expectation'
+
+require 'access_schema/builders/config_builder'
 
 require 'access_schema/builders/basic_builder'
 require 'access_schema/builders/roles_builder'
@@ -24,10 +27,6 @@ module AccessSchema
 
   def self.build_file(*args)
     SchemaBuilder.build_file(*args)
-  end
-
-  def self.with_options(schema, options)
-    schema.with_options(options)
   end
 
   def self.configure(&block)

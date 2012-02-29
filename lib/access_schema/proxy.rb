@@ -17,6 +17,7 @@ module AccessSchema
     def allow?(*args)
       namespace = args[0]
       feature = args[1]
+
       role, options = case args[2]
       when Symbol, String
         [args[2], args[3]]
