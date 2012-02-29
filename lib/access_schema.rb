@@ -1,11 +1,14 @@
 require 'access_schema/version'
 require 'access_schema/exceptions'
 
+require 'access_schema/config'
 require 'access_schema/schema'
 require 'access_schema/assert'
 require 'access_schema/namespace'
 require 'access_schema/element'
 require 'access_schema/expectation'
+
+require 'access_schema/builders/config_builder'
 
 require 'access_schema/builders/basic_builder'
 require 'access_schema/builders/roles_builder'
@@ -26,8 +29,12 @@ module AccessSchema
     SchemaBuilder.build_file(*args)
   end
 
-  def self.with_options(schema, options)
-    Proxy.new(schema, options)
+  def self.configure(&block)
+    @config = ConfigBuilder.build(&block)
+  end
+
+  def self.schema(name)
+    @config.schema(name)
   end
 
 end

@@ -4,13 +4,13 @@ module AccessSchema
     def self.build(&block)
       builder = new(Schema.new)
       builder.instance_eval(&block)
-      builder.schema.freeze
+      Proxy.new(builder.schema)
     end
 
     def self.build_file(filename)
       builder = new(Schema.new)
       builder.instance_eval(File.read(filename))
-      builder.schema.freeze
+      Proxy.new(builder.schema)
     end
 
     def roles(&block)
