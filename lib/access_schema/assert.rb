@@ -2,7 +2,7 @@ module AccessSchema
   class Assert
     attr_reader :name
 
-    def initialize(name, vars, &block)
+    def initialize(name, vars = [], &block)
       @name = name
       @block = block
       vars << :subject unless vars.include?(:subject)
