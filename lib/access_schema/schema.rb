@@ -37,7 +37,6 @@ module AccessSchema
     private
 
     def normalize_args(args)
-      #Rails.logger.debug("schema normalize args: #{args.inspect}")
 
       options = args.last.is_a?(Hash) ? args.pop : {}
       roles = args[2]
@@ -56,7 +55,6 @@ module AccessSchema
     end
 
     def check!(namespace_name, element_name, roles, options)
-      #Rails.logger.debug [namespace_name, element_name, roles, options].inspect
       allowed = for_element(namespace_name, element_name) do |element|
         element.allow?(roles) do |expectation|
           check_assert(expectation, options)

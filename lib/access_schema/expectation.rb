@@ -4,7 +4,7 @@ module AccessSchema
     attr_reader :roles
     attr_reader :options
 
-    def initialize(name, roles, options)
+    def initialize(name, roles, options = {})
       @name = name
       @roles = roles
       @options = options
