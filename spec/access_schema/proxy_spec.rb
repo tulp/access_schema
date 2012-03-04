@@ -13,7 +13,7 @@ describe AccessSchema::Proxy do
   describe "#with_options" do
 
     before do
-      @schema = @proxy.with_options(:plan => :flower)
+      @schema = @proxy.with_options(:plan => [:flower], :user_id => 1)
     end
 
     it "allows to not specify plan for schema calls" do
@@ -23,6 +23,11 @@ describe AccessSchema::Proxy do
     it "but it accepts plan too" do
       @schema.allow?("Review", :mark_featured, :flower).should be_true
       @schema.allow?("Review", :mark_featured, :none).should be_false
+    end
+
+    it "passes options to schema" do
+      @proxy.should_receive(:allow?).with("Review", :mark_featured, [:flower], {:user_id => 1})
+      @schema.allow?("Review", :mark_featured)
     end
 
   end

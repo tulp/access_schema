@@ -10,8 +10,8 @@ module AccessSchema
       @options = options
     end
 
-    def for?(role)
-      @roles.include?(role)
+    def for?(roles)
+      (@roles & roles).size > 0
     end
   end
 end

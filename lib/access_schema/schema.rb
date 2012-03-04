@@ -31,21 +31,34 @@ module AccessSchema
     end
 
     def require!(*args)
-      options = args.last.is_a?(Hash) ? args.pop : {}
-      case args[0]
-      when String, Symbol
-        check!(args[0].to_sym, args[1].to_sym, args[2].to_sym, options)
-      else
-        check!(args[0].class.name.to_sym, args[1].to_sym, args[2].to_sym, options.merge(:subject => args[0]) )
-      end
+      check!(*normalize_args(args))
     end
 
     private
 
-    def check!(namespace_name, element_name, role, options)
+    def normalize_args(args)
+      #Rails.logger.debug("schema normalize args: #{args.inspect}")
 
+      options = args.last.is_a?(Hash) ? args.pop : {}
+      roles = args[2]
+      roles = roles.respond_to?(:map) ? roles.map(&:to_sym) : [roles.to_sym]
+      privilege =  args[1].to_sym
+
+      case args[0]
+      when String, Symbol
+        namespace = args[0].to_sym
+        [namespace, privilege, roles, options]
+      else
+        namespace = args[0].class.name.to_sym
+        [namespace, privilege, roles, options.merge(:subject => args[0])]
+      end
+
+    end
+
+    def check!(namespace_name, element_name, roles, options)
+      #Rails.logger.debug [namespace_name, element_name, roles, options].inspect
       allowed = for_element(namespace_name, element_name) do |element|
-        element.allow?(role) do |expectation|
+        element.allow?(roles) do |expectation|
           check_assert(expectation, options)
         end
       end
