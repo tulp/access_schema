@@ -32,5 +32,7 @@ module AccessSchema
       schema.add_namespace(namespace)
     end
 
+    alias :resource :namespace
+
   end
 end
