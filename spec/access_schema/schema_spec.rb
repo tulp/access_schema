@@ -49,7 +49,7 @@ describe AccessSchema::Schema, "errors rising" do
     it "logs check arguments with debug level" do
       @logger.log_only_level = "debug"
       @schema.allow? "Review", :mark_featured, :flower
-      @logger.output.should == "AccessSchema: check: namespace = 'Review', privilege = 'mark_featured', roles = '[:flower]', options = '{}'"
+      @logger.output.should == "AccessSchema: check PASSED: namespace = 'Review', privilege = 'mark_featured', roles = '[:flower]', options = '{}'"
     end
 
     it "logs check fail with info level" do

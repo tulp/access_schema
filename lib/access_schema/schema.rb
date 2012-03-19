@@ -56,6 +56,13 @@ module AccessSchema
 
     def check!(namespace_name, element_name, roles, options)
 
+
+      allowed = for_element(namespace_name, element_name) do |element|
+        element.allow?(roles) do |expectation|
+          check_assert(expectation, options)
+        end
+      end
+
       format_log_payload = lambda {
         [
           "namespace = '#{namespace_name}'",
@@ -65,18 +72,11 @@ module AccessSchema
         ].join(', ')
       }
 
-      logger.debug{ "check: #{format_log_payload.call}" }
-
-      allowed = for_element(namespace_name, element_name) do |element|
-        element.allow?(roles) do |expectation|
-          check_assert(expectation, options)
-        end
-      end
-
       unless allowed
         logger.info{ "check FAILED: #{format_log_payload.call}" }
         raise NotAlowedError.new
       else
+        logger.debug{ "check PASSED: #{format_log_payload.call}" }
         true
       end
 
