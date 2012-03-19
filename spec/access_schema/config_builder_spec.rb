@@ -12,4 +12,17 @@ describe AccessSchema::ConfigBuilder do
     config.schema(:acl).plans.should_not be_nil
   end
 
+  it "can specify logger" do
+
+    test_logger = AccessSchema::TestLogger.new
+    config = AccessSchema::ConfigBuilder.build do
+      logger test_logger
+    end
+
+    config.logger.debug("hello!")
+
+    test_logger.output.should == "AccessSchema: hello!"
+
+  end
+
 end

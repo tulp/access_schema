@@ -20,6 +20,10 @@ module AccessSchema
       @config.add_schema(name, schema)
     end
 
+    def logger(logger)
+      @config.logger = logger
+    end
+
     private
 
     def schema_from_options(options)

@@ -55,6 +55,18 @@ module AccessSchema
     end
 
     def check!(namespace_name, element_name, roles, options)
+
+      format_log_payload = lambda {
+        [
+          "namespace = '#{namespace_name}'",
+          "privilege = '#{element_name}'",
+          "roles = '#{roles.inspect}'",
+          "options = '#{options.inspect}'"
+        ].join(', ')
+      }
+
+      logger.debug{ "check: #{format_log_payload.call}" }
+
       allowed = for_element(namespace_name, element_name) do |element|
         element.allow?(roles) do |expectation|
           check_assert(expectation, options)
@@ -62,6 +74,7 @@ module AccessSchema
       end
 
       unless allowed
+        logger.info{ "check FAILED: #{format_log_payload.call}" }
         raise NotAlowedError.new
       else
         true
@@ -87,5 +100,10 @@ module AccessSchema
       @namespaces[namespace].elements
     end
 
+    private
+
+    def logger
+      AccessSchema.config.logger
+    end
   end
 end

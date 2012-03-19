@@ -8,6 +8,9 @@ require 'access_schema/namespace'
 require 'access_schema/element'
 require 'access_schema/expectation'
 
+require 'access_schema/loggers/proxy_logger'
+require 'access_schema/loggers/stub_logger'
+
 require 'access_schema/builders/config_builder'
 
 require 'access_schema/builders/basic_builder'
@@ -31,6 +34,10 @@ module AccessSchema
 
   def self.configure(&block)
     @config = ConfigBuilder.build(&block)
+  end
+
+  def self.config
+    @config ||= Config.new
   end
 
   def self.schema(name)
