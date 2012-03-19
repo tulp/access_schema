@@ -184,6 +184,8 @@ anywhere in app. Alternatively it can be assempled with ServiceLocator.
     schema :plans, AccessSchema.build_file('config/plans.rb')
     schema :acl, AccessSchema.build_file('config/acl.rb')
 
+    logger Rails.logger
+
   end
 
 ```

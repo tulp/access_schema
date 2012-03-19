@@ -13,5 +13,13 @@ module AccessSchema
       @schemas[name]
     end
 
+    def logger=(logger)
+      @logger = ProxyLogger.new(logger)
+    end
+
+    def logger
+      @logger ||= StubLogger.new
+    end
+
   end
 end
