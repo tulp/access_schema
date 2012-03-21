@@ -39,9 +39,13 @@ module AccessSchema
     def normalize_args(args)
 
       options = args.last.is_a?(Hash) ? args.pop : {}
-      roles = args[2]
-      roles = roles.respond_to?(:map) ? roles.map(&:to_sym) : [roles.to_sym]
       privilege =  args[1].to_sym
+
+      roles = args[2]
+      roles = roles.respond_to?(:map) ? roles.map(&:to_sym) : [roles && roles.to_sym]
+
+      raise NoRoleError.new if (self.roles & roles).empty?
+
 
       case args[0]
       when String, Symbol
@@ -56,12 +60,16 @@ module AccessSchema
 
     def check!(namespace_name, element_name, roles, options)
 
+      existent_element = false
 
       allowed = for_element(namespace_name, element_name) do |element|
+        existent_element = true
         element.allow?(roles) do |expectation|
           check_assert(expectation, options)
         end
       end
+
+      raise NoPrivilegeError.new(:privilege => element_name.to_sym) unless existent_element
 
       format_log_payload = lambda {
         [
@@ -88,16 +96,22 @@ module AccessSchema
 
     def for_element(namespace, element)
       ns = namespace.to_sym
-      fn = element.to_sym
-      allowed = elements_for(ns).any? do |element|
-        if element.name == fn
+      en = element.to_sym
+
+      elements_for(ns).any? do |element|
+        if element.name == en
           yield(element)
         end
       end
+
     end
 
     def elements_for(namespace)
-      @namespaces[namespace].elements
+      if @namespaces.has_key?(namespace)
+        @namespaces[namespace].elements
+      else
+        raise NoResourceError.new(:resource => namespace)
+      end
     end
 
     private

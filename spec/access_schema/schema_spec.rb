@@ -28,7 +28,22 @@ describe AccessSchema::Schema, "errors rising" do
 
   describe "#allow?" do
 
-    it "raises exception on invalid namespace"
+    it "raises exception on invalid namespace" do
+      lambda {
+        @schema.allow? "Invalid", :mark_featured, :none
+      }.should raise_error(AccessSchema::NoResourceError)
+    end
+
+    it "raises exception on invalid role" do
+      lambda {
+        @schema.allow? "Review", :mark_featured, :invalid
+      }.should raise_error(AccessSchema::NoRoleError)
+
+      lambda {
+        @schema.allow? "Review", :mark_featured
+      }.should raise_error(AccessSchema::NoRoleError)
+    end
+
     it "raises exception on invalid feature"
 
   end
