@@ -24,7 +24,7 @@ module AccessSchema
 
     def allow?(*args)
       require!(*args)
-    rescue NotAlowedError => e
+    rescue NotAllowedError => e
       false
     else
       true
@@ -71,20 +71,18 @@ module AccessSchema
 
       raise NoPrivilegeError.new(:privilege => element_name.to_sym) unless existent_element
 
-      format_log_payload = lambda {
-        [
-          "namespace = '#{namespace_name}'",
-          "privilege = '#{element_name}'",
-          "roles = '#{roles.inspect}'",
-          "options = '#{options.inspect}'"
-        ].join(', ')
+      log_payload = {
+        :resource => namespace_name,
+        :privilege => element_name,
+        :roles => roles,
+        :options => options
       }
 
       unless allowed
-        logger.info{ "check FAILED: #{format_log_payload.call}" }
-        raise NotAlowedError.new
+        logger.info{ "check FAILED: #{log_payload.inspect}" }
+        raise NotAllowedError.new(log_payload)
       else
-        logger.debug{ "check PASSED: #{format_log_payload.call}" }
+        logger.debug{ "check PASSED: #{log_payload.inspect}" }
         true
       end
 

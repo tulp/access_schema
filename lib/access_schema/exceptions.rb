@@ -7,7 +7,7 @@ module AccessSchema
   class AccessError < CheckError; end
 
 
-  class NotAlowedError < AccessError; end
+  class NotAllowedError < AccessError; end
 
   class NoRoleError < CheckError; end
   class NoResourceError < CheckError; end

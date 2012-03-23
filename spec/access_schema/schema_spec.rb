@@ -64,13 +64,13 @@ describe AccessSchema::Schema, "errors rising" do
     it "logs check arguments with debug level" do
       @logger.log_only_level = "debug"
       @schema.allow? "Review", :mark_featured, :flower
-      @logger.output.should == "AccessSchema: check PASSED: namespace = 'Review', privilege = 'mark_featured', roles = '[:flower]', options = '{}'"
+      @logger.output.should == "AccessSchema: check PASSED: {:resource=>:Review, :privilege=>:mark_featured, :roles=>[:flower], :options=>{}}"
     end
 
     it "logs check fail with info level" do
       @logger.log_only_level = "info"
       @schema.allow? "Review", :mark_featured, :none
-      @logger.output.should == "AccessSchema: check FAILED: namespace = 'Review', privilege = 'mark_featured', roles = '[:none]', options = '{}'"
+      @logger.output.should == "AccessSchema: check FAILED: {:resource=>:Review, :privilege=>:mark_featured, :roles=>[:none], :options=>{}}"
     end
   end
 
