@@ -13,5 +13,6 @@ module AccessSchema
     def for?(roles)
       (@roles & roles).size > 0
     end
+
   end
 end

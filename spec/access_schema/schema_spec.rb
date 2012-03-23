@@ -70,7 +70,7 @@ describe AccessSchema::Schema, "errors rising" do
     it "logs check fail with info level" do
       @logger.log_only_level = "info"
       @schema.allow? "Review", :mark_featured, :none
-      @logger.output.should == "AccessSchema: check FAILED: {:resource=>:Review, :privilege=>:mark_featured, :roles=>[:none], :options=>{}}"
+      @logger.output.should == "AccessSchema: check FAILED: {:resource=>:Review, :privilege=>:mark_featured, :roles=>[:none], :options=>{}, :failed_asserts=>[]}"
     end
   end
 

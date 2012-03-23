@@ -61,11 +61,14 @@ module AccessSchema
     def check!(namespace_name, element_name, roles, options)
 
       existent_element = false
+      failed_asserts = []
 
       allowed = for_element(namespace_name, element_name) do |element|
         existent_element = true
         element.allow?(roles) do |expectation|
-          check_assert(expectation, options)
+          check_assert(expectation, options).tap do |result|
+            failed_asserts << expectation unless result
+          end
         end
       end
 
@@ -79,6 +82,7 @@ module AccessSchema
       }
 
       unless allowed
+        log_payload[:failed_asserts] = failed_asserts.map(&:name)
         logger.info{ "check FAILED: #{log_payload.inspect}" }
         raise NotAllowedError.new(log_payload)
       else
