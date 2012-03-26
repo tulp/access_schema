@@ -22,9 +22,9 @@ add some default options in helpers:
 
   class AccessSchemaHelper
 
-    def role
+    def plan
       AccessSchema.schema(:plans).with_options({
-        :role => Rails.development? && params[:debug_role] || current_user.try(:role) || :none
+        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
       })
     end
 
@@ -43,14 +43,14 @@ So at may be used in controllers:
 
 ```ruby
   acl.require! review, :edit
-  role.require! review, :mark_privileged
+  plan.require! review, :mark_featured
 
 ```
 
 Or views:
 
 ```ruby
-  - if role.allow? review, :add_photo
+  - if plan.allow? review, :add_photo
     = render :partial => "add_photo"
 ```
 
@@ -64,17 +64,17 @@ example. So we have to pass extra options:
 
   class ReviewService < BaseSevice
 
-    def mark_privileged(review_id, options)
+    def mark_featured(review_id, options)
 
       review = Review.find(review_id)
 
       acl = AccessSchema.schema(:acl).with_options(:roles => options[:actor].roles)
-      acl.require! review, :mark_privileged
+      acl.require! review, :mark_featured
 
       plans = AccessSchema.schema(:plans).with_options(:plans => options[:actor].plans)
-      plans.require! review, :mark_privileged
+      plans.require! review, :mark_featured
 
-      review.privileged = true
+      review.featured = true
       review.save!
 
     end
@@ -100,7 +100,7 @@ example. So we have to pass extra options:
 ### Definition
 
 ```ruby
-  # config/roles.rb
+  # config/plans.rb
 
   roles do
     role :none
@@ -123,7 +123,7 @@ example. So we have to pass extra options:
 
   resource "Review" do
 
-    privilege :mark_privileged, [:flower, :bouquet]
+    privilege :mark_featured, [:flower, :bouquet]
 
     privilege :add_photo, [:bouquet] do
       assert :photo_limit, [:none], :limit => 1
