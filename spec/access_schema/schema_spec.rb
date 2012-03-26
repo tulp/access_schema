@@ -28,7 +28,7 @@ describe AccessSchema::Schema, "errors rising" do
 
   describe "#allow?" do
 
-    it "raises exception on invalid namespace" do
+    it "raises exception on invalid resource" do
       lambda {
         @schema.allow? "Invalid", :mark_featured, :none
       }.should raise_error(AccessSchema::NoResourceError)
@@ -45,6 +45,26 @@ describe AccessSchema::Schema, "errors rising" do
     end
 
     it "raises exception on invalid feature"
+
+  end
+
+  describe "privilege union for multiple roles" do
+
+    context "when checking privilege :update for Review in example schema" do
+
+      it "passes for admin" do
+        @schema.should be_allow("Review", :update, [:admin])
+      end
+
+      it "fails for user" do
+        @schema.should_not be_allow("Review", :update, [:user])
+      end
+
+      it "passes for admin and user" do
+        @schema.should be_allow("Review", :update, [:admin, :user])
+      end
+
+    end
 
   end
 
@@ -70,7 +90,7 @@ describe AccessSchema::Schema, "errors rising" do
     it "logs check fail with info level" do
       @logger.log_only_level = "info"
       @schema.allow? "Review", :mark_featured, :none
-      @logger.output.should == "AccessSchema: check FAILED: {:resource=>:Review, :privilege=>:mark_featured, :roles=>[:none], :options=>{}, :failed_asserts=>[]}"
+      @logger.output.should == "AccessSchema: check FAILED: {:resource=>:Review, :privilege=>:mark_featured, :roles=>[:none], :options=>{}, :failed_asserts=>{}}"
     end
   end
 

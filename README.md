@@ -5,8 +5,6 @@ to define ACL schemas with realy simple DSL.
 
 Inspired by [ya_acl](https://github.com/kaize/ya_acl)
 
-With a couple of aliases in DSL it enables you to deal with tariff plans. Plan and role, feature and privilege are synonyms.
-
 ```
   gem install access_schema
 ```
@@ -24,9 +22,9 @@ add some default options in helpers:
 
   class AccessSchemaHelper
 
-    def plan
+    def role
       AccessSchema.schema(:plans).with_options({
-        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
+        :role => Rails.development? && params[:debug_role] || current_user.try(:role) || :none
       })
     end
 
@@ -45,14 +43,14 @@ So at may be used in controllers:
 
 ```ruby
   acl.require! review, :edit
-  plan.require! review, :mark_featured
+  role.require! review, :mark_privileged
 
 ```
 
 Or views:
 
 ```ruby
-  - if plan.allow? review, :add_photo
+  - if role.allow? review, :add_photo
     = render :partial => "add_photo"
 ```
 
@@ -66,17 +64,17 @@ example. So we have to pass extra options:
 
   class ReviewService < BaseSevice
 
-    def mark_featured(review_id, options)
+    def mark_privileged(review_id, options)
 
       review = Review.find(review_id)
 
-      acl = AccessSchema.schema(:acl).with_options(:role => options[:actor].roles)
-      acl.require! review, :mark_featured
+      acl = AccessSchema.schema(:acl).with_options(:roles => options[:actor].roles)
+      acl.require! review, :mark_privileged
 
-      plans = AccessSchema.schema(:plans).with_options(:plan => options[:actor].plan)
-      plans.require! review, :mark_featured
+      plans = AccessSchema.schema(:plans).with_options(:plans => options[:actor].plans)
+      plans.require! review, :mark_privileged
 
-      review.featured = true
+      review.privileged = true
       review.save!
 
     end
@@ -85,10 +83,10 @@ example. So we have to pass extra options:
 
       review = Review.find(review_id)
 
-      acl = AccessSchema.schema(:acl).with_options(:role => options[:actor].roles)
+      acl = AccessSchema.schema(:acl).with_options(:roles => options[:actor].roles)
       acl.require! review, :edit
 
-      plans = AccessSchema.schema(:plans).with_options(:plan => options[:actor].plan)
+      plans = AccessSchema.schema(:plan).with_options(:plan => options[:actor].plan)
       plans.require! review, :edit, :new_attrs => attrs
 
       review.update_attributes(attrs)
@@ -102,13 +100,13 @@ example. So we have to pass extra options:
 ### Definition
 
 ```ruby
-  # config/plans.rb
+  # config/roles.rb
 
-  plans do
-    plan :none
-    plan :bulb
-    plan :flower
-    plan :bouquet
+  roles do
+    role :none
+    role :bulb
+    role :flower
+    role :bouquet
   end
 
   asserts do
@@ -123,22 +121,17 @@ example. So we have to pass extra options:
 
   end
 
-  namespace "Review" do
+  resource "Review" do
 
-    feature :mark_featured, [:flower, :bouquet]
+    privilege :mark_privileged, [:flower, :bouquet]
 
-    feature :add_photo, [:bouquet] do
+    privilege :add_photo, [:bouquet] do
       assert :photo_limit, [:none], :limit => 1
       assert :photo_limit, [:bulb], :limit => 5
       assert :photo_limit, [:flower], :limit => 10
     end
 
-    # Important fields from plans aspect:
-    #   greeting
-    #   logo
-    #   site_url
-    #
-    feature :edit, [:bouquet] do
+    privilege :edit, [:bouquet] do
       assert :attrs, [:bulb], :disallow => [:greeting, :logo, :site_url]
       assert :attrs, [:flower], :disallow => [:site_url]
     end
@@ -161,7 +154,7 @@ example. So we have to pass extra options:
 
   end
 
-  namespace "Review" do
+  resource "Review" do
 
     privilege :edit, [:admin] do
       assert :owner, [:none]

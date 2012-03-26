@@ -1,9 +1,12 @@
 
-plans do
-  plan :none
-  plan :bulb
-  plan :flower
-  plan :bouquet
+roles do
+  role :none
+  role :bulb
+  role :flower
+  role :bouquet
+
+  role :admin
+  role :user
 end
 
 asserts do
@@ -12,16 +15,24 @@ asserts do
     subject.photos_count < limit
   end
 
+  assert :false do
+    false
+  end
+
 end
 
-namespace "Review" do
+resource "Review" do
 
-  feature :mark_featured, [:flower, :bouquet]
+  privilege :mark_featured, [:flower, :bouquet]
 
-  feature :add_photo, [:bouquet] do
+  privilege :add_photo, [:bouquet] do
     assert :photo_limit, [:none], :limit => 1
     assert :photo_limit, [:bulb], :limit => 5
     assert :photo_limit, [:flower], :limit => 10
+  end
+
+  privilege :update, [:admin] do
+    assert :false, [:user]
   end
 
 end

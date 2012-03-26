@@ -7,8 +7,8 @@ describe AccessSchema::SchemaBuilder do
 
   it "builds schema from block" do
     @schema = AccessSchema::SchemaBuilder.build do
-      plans do
-        plan :none
+      roles do
+        role :none
       end
     end
     @schema.should be
@@ -36,8 +36,8 @@ describe AccessSchema::SchemaBuilder, "produced schema example" do
     @schema = AccessSchema::SchemaBuilder.build_file('spec/schema_example.rb')
   end
 
-  it "creates plans" do
-    @schema.plans.should == [:none, :bulb, :flower, :bouquet]
+  it "creates roles" do
+    @schema.roles.should == [:none, :bulb, :flower, :bouquet, :admin, :user]
   end
 
   context "when checking against plan 'none'"  do

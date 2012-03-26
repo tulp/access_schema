@@ -18,21 +18,17 @@ module AccessSchema
       builder.instance_eval(&block)
     end
 
-    alias :plans :roles
-
     def asserts(&block)
       builder = AssertsBuilder.new(schema)
       builder.instance_eval(&block)
     end
 
-    def namespace(name, &block)
-      namespace = Namespace.new(name.to_sym)
-      builder = NamespaceBuilder.new(namespace)
+    def resource(name, &block)
+      resource = Resource.new(name.to_sym)
+      builder = ResourceBuilder.new(resource)
       builder.instance_eval(&block)
-      schema.add_namespace(namespace)
+      schema.add_resource(resource)
     end
-
-    alias :resource :namespace
 
   end
 end
