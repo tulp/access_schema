@@ -1,5 +1,5 @@
 module AccessSchema
-  class ElementBuilder < BasicBuilder
+  class PrivilegeBuilder < BasicBuilder
 
     def assert(name, roles = [], options = {})
       expectation = Expectation.new(name.to_sym, roles.map(&:to_sym), options)

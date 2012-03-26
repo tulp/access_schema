@@ -9,7 +9,7 @@ describe AccessSchema::ConfigBuilder do
       schema :acl, :file => 'spec/schema_example.rb'
     end
 
-    config.schema(:acl).plans.should_not be_nil
+    config.schema(:acl).roles.should_not be_nil
   end
 
   it "can specify logger" do

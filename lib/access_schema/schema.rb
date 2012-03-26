@@ -7,7 +7,7 @@ module AccessSchema
     def initialize
       @roles = []
       @asserts = {}
-      @namespaces = {}
+      @resources = {}
     end
 
     def add_role(role)
@@ -18,8 +18,8 @@ module AccessSchema
       @asserts[assert.name] = assert
     end
 
-    def add_namespace(namespace)
-      @namespaces[namespace.name] = namespace
+    def add_resource(resource)
+      @resources[resource.name] = resource
     end
 
     def allow?(*args)
@@ -46,43 +46,61 @@ module AccessSchema
 
       raise NoRoleError.new if (self.roles & roles).empty?
 
+      roles = normalize_roles_order(roles)
 
       case args[0]
       when String, Symbol
-        namespace = args[0].to_sym
-        [namespace, privilege, roles, options]
+        resource = args[0].to_sym
+        [resource, privilege, roles, options]
       else
-        namespace = args[0].class.name.to_sym
-        [namespace, privilege, roles, options.merge(:subject => args[0])]
+        resource = args[0].class.name.to_sym
+        [resource, privilege, roles, options.merge(:subject => args[0])]
       end
 
     end
 
-    def check!(namespace_name, element_name, roles, options)
+    def normalize_roles_order(roles)
+      @roles.select do |role|
+        roles.include? role
+      end
+    end
 
-      existent_element = false
-      failed_asserts = []
+    def check!(resource_name, privilege_name, roles, options)
 
-      allowed = for_element(namespace_name, element_name) do |element|
-        existent_element = true
-        element.allow?(roles) do |expectation|
-          check_assert(expectation, options).tap do |result|
-            failed_asserts << expectation unless result
+      resouce_name = resource_name.to_sym
+      privilege_name = privilege_name.to_sym
+
+      resource = @resources[resource_name]
+
+      if resource.nil?
+        raise NoResourceError.new(:resource => resource_name)
+      end
+
+      privilege = resource.get_privilege(privilege_name)
+
+      if privilege.nil?
+        raise NoPrivilegeError.new(:resource => resource_name, :privilege => privilege_name)
+      end
+
+      failed_asserts = Hash.new{|h, k| h[k] = []}
+
+      roles_checks = roles.map do |role|
+        privilege.allow?([role]) do |expectation|
+          @asserts[expectation.name].check?(expectation.options.merge(options)).tap do |result|
+            failed_asserts[role] << expectation.name unless result
           end
         end
       end
 
-      raise NoPrivilegeError.new(:privilege => element_name.to_sym) unless existent_element
-
       log_payload = {
-        :resource => namespace_name,
-        :privilege => element_name,
+        :resource => resource_name,
+        :privilege => privilege_name,
         :roles => roles,
         :options => options
       }
 
-      unless allowed
-        log_payload[:failed_asserts] = failed_asserts.map(&:name)
+      unless roles_checks.any?
+        log_payload[:failed_asserts] = failed_asserts
         logger.info{ "check FAILED: #{log_payload.inspect}" }
         raise NotAllowedError.new(log_payload)
       else
@@ -90,30 +108,6 @@ module AccessSchema
         true
       end
 
-    end
-
-    def check_assert(expectation, options)
-      @asserts[expectation.name].check?(expectation.options.merge(options))
-    end
-
-    def for_element(namespace, element)
-      ns = namespace.to_sym
-      en = element.to_sym
-
-      elements_for(ns).any? do |element|
-        if element.name == en
-          yield(element)
-        end
-      end
-
-    end
-
-    def elements_for(namespace)
-      if @namespaces.has_key?(namespace)
-        @namespaces[namespace].elements
-      else
-        raise NoResourceError.new(:resource => namespace)
-      end
     end
 
     private

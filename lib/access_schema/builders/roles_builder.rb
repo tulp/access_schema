@@ -5,7 +5,5 @@ module AccessSchema
       schema.add_role(role.to_sym)
     end
 
-    alias :plan :role
-
   end
 end

@@ -1,5 +1,5 @@
 module AccessSchema
-  class Element
+  class Privilege
     attr_reader :name
 
     def initialize(name, roles, &block)

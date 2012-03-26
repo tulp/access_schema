@@ -29,8 +29,8 @@ module AccessSchema
     private
 
     def normalize_args(args)
-      namespace = args[0]
-      feature = args[1]
+      resource = args[0]
+      privilege = args[1]
 
       roles, options = case args[2]
       when Hash, nil
@@ -43,7 +43,7 @@ module AccessSchema
       options_to_pass.delete :plan
       options_to_pass.delete :role
 
-      [namespace, feature, roles, options_to_pass.merge(options)]
+      [resource, privilege, roles, options_to_pass.merge(options)]
     end
 
   end
