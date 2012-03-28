@@ -39,10 +39,10 @@ module AccessSchema
     def normalize_args(args)
 
       options = args.last.is_a?(Hash) ? args.pop : {}
-      privilege =  args[1].to_sym
+      privilege =  args[1].to_s
 
       roles = args[2]
-      roles = roles.respond_to?(:map) ? roles.map(&:to_sym) : [roles && roles.to_sym]
+      roles = roles.respond_to?(:map) ? roles.map(&:to_s) : [roles && roles.to_s]
 
       raise NoRoleError.new if (self.roles & roles).empty?
 
@@ -50,10 +50,10 @@ module AccessSchema
 
       case args[0]
       when String, Symbol
-        resource = args[0].to_sym
+        resource = args[0].to_s
         [resource, privilege, roles, options]
       else
-        resource = args[0].class.name.to_sym
+        resource = args[0].class.name.to_s
         [resource, privilege, roles, options.merge(:subject => args[0])]
       end
 
@@ -67,8 +67,8 @@ module AccessSchema
 
     def check!(resource_name, privilege_name, roles, options)
 
-      resouce_name = resource_name.to_sym
-      privilege_name = privilege_name.to_sym
+      resouce_name = resource_name.to_s
+      privilege_name = privilege_name.to_s
 
       resource = @resources[resource_name]
 

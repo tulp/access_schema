@@ -2,7 +2,7 @@ module AccessSchema
   class RolesBuilder < BasicBuilder
 
     def role(role)
-      schema.add_role(role.to_sym)
+      schema.add_role(role.to_s)
     end
 
   end

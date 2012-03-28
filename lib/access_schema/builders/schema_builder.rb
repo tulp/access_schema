@@ -24,7 +24,7 @@ module AccessSchema
     end
 
     def resource(name, &block)
-      resource = Resource.new(name.to_sym)
+      resource = Resource.new(name.to_s)
       builder = ResourceBuilder.new(resource)
       builder.instance_eval(&block)
       schema.add_resource(resource)

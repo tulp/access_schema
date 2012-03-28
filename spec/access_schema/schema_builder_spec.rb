@@ -37,7 +37,7 @@ describe AccessSchema::SchemaBuilder, "produced schema example" do
   end
 
   it "creates roles" do
-    @schema.roles.should == [:none, :bulb, :flower, :bouquet, :admin, :user]
+    @schema.roles.should ==%w(none bulb flower bouquet admin user)
   end
 
   context "when checking against plan 'none'"  do
