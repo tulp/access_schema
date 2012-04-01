@@ -10,10 +10,6 @@ module AccessSchema
       @schema.roles
     end
 
-    def plans
-      @schema.plans
-    end
-
     def allow?(*args)
       @schema.allow?(*normalize_args(args))
     end
@@ -34,14 +30,13 @@ module AccessSchema
 
       roles, options = case args[2]
       when Hash, nil
-        [@options[:role] || @options[:plan], args[2] || {}]
+        [@options[:roles], args[2] || {}]
       else
         [args[2], args[3] || {}]
       end
 
       options_to_pass = @options.dup
-      options_to_pass.delete :plan
-      options_to_pass.delete :role
+      options_to_pass.delete :roles
 
       [resource, privilege, roles, options_to_pass.merge(options)]
     end

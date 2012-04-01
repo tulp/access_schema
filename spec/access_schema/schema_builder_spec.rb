@@ -25,9 +25,6 @@ describe AccessSchema::SchemaBuilder do
 
 end
 
-
-class Review; end
-
 describe AccessSchema::SchemaBuilder, "produced schema example" do
 
   before do
@@ -40,7 +37,7 @@ describe AccessSchema::SchemaBuilder, "produced schema example" do
     @schema.roles.should ==%w(none bulb flower bouquet admin user)
   end
 
-  context "when checking against plan 'none'"  do
+  context "when checking against role 'none'"  do
 
     it "does not allows to mark featured" do
       @schema.allow?(@review, :mark_featured, :none).should be_false
@@ -58,7 +55,7 @@ describe AccessSchema::SchemaBuilder, "produced schema example" do
 
   end
 
-  context "when checking against plan 'bulb'"  do
+  context "when checking against role 'bulb'"  do
 
     it "does not allow to mark featured" do
       @schema.allow?(@review, :mark_featured, :bulb).should be_false
@@ -76,7 +73,7 @@ describe AccessSchema::SchemaBuilder, "produced schema example" do
 
   end
 
-  context "when checking against plan 'flower'"  do
+  context "when checking against role 'flower'"  do
 
     it "allows to mark featured" do
       @schema.allow?(@review, :mark_featured, :flower).should be_true
@@ -94,7 +91,7 @@ describe AccessSchema::SchemaBuilder, "produced schema example" do
 
   end
 
-  context "when checking against plan 'bouquet'"  do
+  context "when checking against role 'bouquet'"  do
 
     it "allows to mark featured" do
       @schema.allow?(@review, :mark_featured, :bouquet).should be_true

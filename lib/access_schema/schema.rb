@@ -2,7 +2,6 @@ module AccessSchema
   class Schema
 
     attr_reader :roles
-    alias :plans :roles
 
     def initialize
       @roles = []
@@ -40,26 +39,46 @@ module AccessSchema
 
       options = args.last.is_a?(Hash) ? args.pop : {}
       privilege =  args[1].to_s
-
       roles = args[2]
-      roles = roles.respond_to?(:map) ? roles.map(&:to_s) : [roles && roles.to_s]
-
-      raise NoRoleError.new if (self.roles & roles).empty?
-
-      roles = normalize_roles_order(roles)
 
       case args[0]
       when String, Symbol
         resource = args[0].to_s
-        [resource, privilege, roles, options]
       else
         resource = args[0].class.name.to_s
-        [resource, privilege, roles, options.merge(:subject => args[0])]
+        options.merge!(:subject => args[0])
       end
+
+      roles = calculate_roles(roles, options)
+
+      if (self.roles & roles).empty?
+        raise InvalidRolesError.new(:roles => roles)
+      end
+
+      roles = sort_roles(roles)
+
+      [resource, privilege, roles, options]
+    end
+
+    def calculate_roles(roles, check_options)
+
+      roles = if roles.respond_to?(:call)
+                roles.call(check_options.dup)
+              elsif !roles.respond_to?(:map)
+                [ roles ]
+              else
+                roles
+              end
+
+      unless roles.respond_to?(:map)
+        raise InvalidRolesError.new(:result => roles)
+      end
+
+      roles.map(&:to_s)
 
     end
 
-    def normalize_roles_order(roles)
+    def sort_roles(roles)
       @roles.select do |role|
         roles.include? role
       end
@@ -109,8 +128,6 @@ module AccessSchema
       end
 
     end
-
-    private
 
     def logger
       AccessSchema.config.logger
