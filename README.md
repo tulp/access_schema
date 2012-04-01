@@ -1,7 +1,6 @@
-# AccessSchema gem - ACL/plans for your app
+# AccessSchema gem - ACL and domain policies for your app
 
-AccessSchema provides decoupled from Rails and ORM agnostic tool
-to define ACL schemas with realy simple DSL.
+AccessSchema is tool to add ACL and domain policy rules to an application. It is framework/ORM agnostic and provides declarative DSL.
 
 Inspired by [ya_acl](https://github.com/kaize/ya_acl)
 
@@ -9,104 +8,23 @@ Inspired by [ya_acl](https://github.com/kaize/ya_acl)
   gem install access_schema
 ```
 
-## An example of use
-
-
-### Accessing from application code
-
-In Rails controllers we usualy have a current_user and we can
-add some default options in helpers:
-
-```ruby
-  #access_schema_helper.rb
-
-  class AccessSchemaHelper
-
-    def plan
-      AccessSchema.schema(:plans).with_options({
-        :plan => Rails.development? && params[:debug_plan] || current_user.try(:plan) || :none
-      })
-    end
-
-    def acl
-      AccessSchema.schema(:acl).with_options({
-        :role => current_user.try(:role) || :none,
-        :user_id => current_user.try(:id)
-      })
-    end
-
-  end
-
-```
-
-So at may be used in controllers:
-
-```ruby
-  acl.require! review, :edit
-  plan.require! review, :mark_featured
-
-```
-
-Or views:
-
-```ruby
-  - if plan.allow? review, :add_photo
-    = render :partial => "add_photo"
-```
-
-
-On the ather side there are no any current_user accessible. In a Service Layer for
-example. So we have to pass extra options:
-
-
-```ruby
-  #./app/services/review_service.rb
-
-  class ReviewService < BaseSevice
-
-    def mark_featured(review_id, options)
-
-      review = Review.find(review_id)
-
-      acl = AccessSchema.schema(:acl).with_options(:roles => options[:actor].roles)
-      acl.require! review, :mark_featured
-
-      plans = AccessSchema.schema(:plans).with_options(:plans => options[:actor].plans)
-      plans.require! review, :mark_featured
-
-      review.featured = true
-      review.save!
-
-    end
-
-    def update(review_id, attrs)
-
-      review = Review.find(review_id)
-
-      acl = AccessSchema.schema(:acl).with_options(:roles => options[:actor].roles)
-      acl.require! review, :edit
-
-      plans = AccessSchema.schema(:plan).with_options(:plan => options[:actor].plan)
-      plans.require! review, :edit, :new_attrs => attrs
-
-      review.update_attributes(attrs)
-
-    end
-
-  end
-
-```
+## An example of use with Rails
 
 ### Definition
 
 ```ruby
-  # config/plans.rb
+  # config/policy.rb
 
   roles do
+
+    # Tariff plans
     role :none
     role :bulb
     role :flower
     role :bouquet
+
+    # To allow admin violate tariff plan rules
+    role :admin
   end
 
   asserts do
@@ -125,7 +43,8 @@ example. So we have to pass extra options:
 
     privilege :mark_featured, [:flower, :bouquet]
 
-    privilege :add_photo, [:bouquet] do
+    # Admin is able to add over limit
+    privilege :add_photo, [:bouquet, :admin] do
       assert :photo_limit, [:none], :limit => 1
       assert :photo_limit, [:bulb], :limit => 5
       assert :photo_limit, [:flower], :limit => 10
@@ -154,27 +73,30 @@ example. So we have to pass extra options:
 
   end
 
-  resource "Review" do
+  resource "ReviewsController" do
+
+    privilege :index
+    privilege :show
 
     privilege :edit, [:admin] do
+      assert :owner, [:none]
+    end
+
+    privilege :update, [:admin] do
       assert :owner, [:none]
     end
 
   end
 ```
 
-## Configuration
-
-Configured schema can be accessed with AccessSchema.schema(name)
-anywhere in app. Alternatively it can be assempled with ServiceLocator.
-
+### Configuration
 
 ```ruby
   #config/initializers/access_schema.rb
 
   AccessSchema.configure do
 
-    schema :plans, AccessSchema.build_file('config/plans.rb')
+    schema :policy, AccessSchema.build_file('config/policy.rb')
     schema :acl, AccessSchema.build_file('config/acl.rb')
 
     logger Rails.logger
@@ -183,4 +105,132 @@ anywhere in app. Alternatively it can be assempled with ServiceLocator.
 
 ```
 
+### Accessing from Rails application code
+
+Define a helper:
+
+```ruby
+  #access_schema_helper.rb
+
+  class AccessSchemaHelper
+
+    # Use ACL in controllers:
+    #
+    #   before_filter { required! :reviews, :delete }
+    #
+    # and views
+    #
+    #   - if can? :reviews, :delete, :subject => review
+    #     = link_to "Delete", review_path(review)
+    #
+
+    def required!(route_method, action = nil, options = {})
+
+      url_options = send "hash_for_#{route_method}_path"
+      resource = "#{url_options[:controller].to_s.camelize}Controller"
+
+      privilege = action || url_options[:action]
+      acl.require! resource, privilege, options
+
+    end
+
+    def can?(*args)
+      required!(*args)
+    rescue AccessSchema::NotAllowed => e
+      false
+    else
+      true
+    end
+
+    def acl
+
+      AccessSchema.schema(:acl).with_options({
+        roles: current_roles,
+        user_id: current_user.try(:id)
+      })
+
+    end
+
+    # Use in controllers and views
+    # tarifF plans or other domain logic policies
+    #
+    #   policy.allow? review, :add_photo
+    #
+
+
+    def policy
+
+      # Policy have to check actor roles and subject owner state (tariff plans for example)
+      # to evaluate permission. So we pass proc and deal with particular subject to
+      # calculate roles.
+      #
+      roles_calculator = proc do |options|
+
+        plan = options[:subject].try(:owner).try(:plan)
+        plan ||= [ current_user.try(:plan) || :none ]
+        current_roles | plan
+
+      end
+
+      AccessSchema.schema(:policy).with_options({
+        roles: roles_calculator,
+        user_id: current_user.try(:id)
+      })
+
+    end
+
+  end
+
+```
+
+But there are no current_user method in a Service Layer! So pass an extra option - actor:
+
+```ruby
+  #./app/services/base_service.rb
+  class BaseService
+
+    def policy(actor)
+
+      roles_calculator = proc do |options|
+
+        plan = options[:subject].try(:owner).try(:plan)
+        plan ||= [ actor.try(:plan) || :none ]
+        current_roles | plan
+
+      end
+
+      AccessSchema.schema(:policy).with_options({
+        roles: roles_calculator,
+        user_id: actor.try(:id)
+      })
+    end
+
+  end
+
+  #./app/services/review_service.rb
+
+  class ReviewService < BaseSevice
+
+    def mark_featured(review_id, actor)
+
+      review = Review.find(review_id)
+      policy(actor).require! review, :mark_featured
+
+      review.featured = true
+      review.save!
+
+    end
+
+    def update(review_id, attrs, actor)
+
+      review = Review.find(review_id)
+      policy(actor).require! review, :edit, :attrs => attrs
+
+      review.update_attributes(attrs)
+
+    end
+
+  end
+
+```
 
