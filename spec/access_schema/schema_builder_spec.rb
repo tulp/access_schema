@@ -25,9 +25,6 @@ describe AccessSchema::SchemaBuilder do
 
 end
 
-
-class Review; end
-
 describe AccessSchema::SchemaBuilder, "produced schema example" do
 
   before do

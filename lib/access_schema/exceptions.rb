@@ -9,7 +9,7 @@ module AccessSchema
 
   class NotAllowedError < AccessError; end
 
-  class NoRoleError < CheckError; end
+  class InvalidRolesError < CheckError; end
   class NoResourceError < CheckError; end
   class NoPrivilegeError < CheckError; end
 

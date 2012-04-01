@@ -37,11 +37,11 @@ describe AccessSchema::Schema, "errors rising" do
     it "raises exception on invalid role" do
       lambda {
         @schema.allow? "Review", :mark_featured, :invalid
-      }.should raise_error(AccessSchema::NoRoleError)
+      }.should raise_error(AccessSchema::InvalidRolesError)
 
       lambda {
         @schema.allow? "Review", :mark_featured
-      }.should raise_error(AccessSchema::NoRoleError)
+      }.should raise_error(AccessSchema::InvalidRolesError)
     end
 
     it "raises exception on invalid feature"
@@ -63,6 +63,57 @@ describe AccessSchema::Schema, "errors rising" do
       it "passes for admin and user" do
         @schema.should be_allow("Review", :update, [:admin, :user])
       end
+
+    end
+
+  end
+
+  describe "dynamic roles calculation" do
+
+    it "accepts proc as roles" do
+
+      lambda {
+        roles_calculator = proc { [:admin] }
+        @schema.allow? "Review", :update, roles_calculator
+      }.should_not raise_error
+
+    end
+
+    it "passes options hash with subject into proc" do
+
+      @passed_options = nil
+      roles_calculator = proc do |options|
+        @passed_options = options
+        [:admin]
+      end
+      subject = Review.new
+      @schema.allow? subject, :update, roles_calculator, :option1 => :value1
+      @passed_options.should be
+      @passed_options[:subject].should == subject
+      @passed_options[:option1].should == :value1
+
+    end
+
+    it "passes a copy of options hash" do
+
+      @passed_options = {:option1 => :value1}
+      roles_calculator = proc do |options|
+        options[:option1] = :changed_value
+        [:admin]
+      end
+
+      @schema.allow? "Review", :update, roles_calculator
+
+      @passed_options[:option1].should == :value1
+
+    end
+
+    it "raises error if none array returned from proc" do
+
+      lambda {
+        roles_calculator = proc { :admin }
+        @schema.allow? "Review", :update, roles_calculator
+      }.should raise_error(AccessSchema::InvalidRolesError)
 
     end
 
