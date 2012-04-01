@@ -19,6 +19,10 @@ asserts do
     false
   end
 
+  assert :echo, [:result] do
+    result
+  end
+
 end
 
 resource "Review" do
@@ -33,6 +37,12 @@ resource "Review" do
 
   privilege :update, [:admin] do
     assert :false, [:user]
+  end
+
+  privilege :view
+
+  privilege :echo_privilege do
+    assert :echo
   end
 
 end

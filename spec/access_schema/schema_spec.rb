@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe AccessSchema::Schema, "errors rising" do
+describe AccessSchema::Schema do
 
   before do
     @schema = AccessSchema::SchemaBuilder.build_file('spec/schema_example.rb')
@@ -45,6 +45,15 @@ describe AccessSchema::Schema, "errors rising" do
     end
 
     it "raises exception on invalid feature"
+
+    it "passes is no roles and asserts are specified in privilege definition" do
+      @schema.should be_allow("Review", :view, [:user])
+    end
+
+    it "checks assert if no roles specified in assert definition" do
+      @schema.should be_allow("Review", :echo_privilege, [:user], :result => true)
+      @schema.should_not be_allow("Review", :echo_privilege, [:user], :result => false)
+    end
 
   end
 
