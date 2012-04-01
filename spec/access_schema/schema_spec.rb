@@ -6,7 +6,7 @@ describe AccessSchema::Schema, "errors rising" do
     @schema = AccessSchema::SchemaBuilder.build_file('spec/schema_example.rb')
   end
 
-  describe "#add_plan" do
+  describe "#add_role" do
 
     it "raises error if duplicate"
 
@@ -21,7 +21,7 @@ describe AccessSchema::Schema, "errors rising" do
   describe "#add_feature" do
 
     it "raises error if duplicate"
-    it "raises error for invalid plan"
+    it "raises error for invalid role"
     it "raises error for invalid assert"
 
   end

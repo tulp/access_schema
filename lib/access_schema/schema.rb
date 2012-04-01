@@ -2,7 +2,6 @@ module AccessSchema
   class Schema
 
     attr_reader :roles
-    alias :plans :roles
 
     def initialize
       @roles = []
