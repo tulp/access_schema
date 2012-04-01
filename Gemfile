@@ -7,6 +7,7 @@ group :development, :test do
   gem "rake"
 
   gem "rspec"
+  gem "simplecov", :require => false
   gem "rack-test"
   gem "guard"
   gem "guard-rspec"
