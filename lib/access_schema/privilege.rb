@@ -18,8 +18,6 @@ module AccessSchema
         checklist = @expectations.select { |exp| exp.for?(roles) }
         if checklist.length > 0
           checklist.all? { |exp| yield(exp) }
-        else
-          @roles.empty?
         end
       end
     end

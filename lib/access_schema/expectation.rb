@@ -11,7 +11,7 @@ module AccessSchema
     end
 
     def for?(roles)
-      @roles.empty? || (@roles & roles).size > 0
+      (@roles & roles).size > 0
     end
 
   end

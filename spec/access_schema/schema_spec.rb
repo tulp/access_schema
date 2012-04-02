@@ -46,12 +46,12 @@ describe AccessSchema::Schema do
 
     it "raises exception on invalid feature"
 
-    it "passes is no roles and asserts are specified in privilege definition" do
-      @schema.should be_allow("Review", :view, [:user])
+    it "fails if no roles and asserts are specified in privilege definition" do
+      @schema.should_not be_allow("Review", :view, [:user])
     end
 
-    it "checks assert if no roles specified in assert definition" do
-      @schema.should be_allow("Review", :echo_privilege, [:user], :result => true)
+    it "does not checks assert if no roles specified in assert definition" do
+      @schema.should_not be_allow("Review", :echo_privilege, [:user], :result => true)
       @schema.should_not be_allow("Review", :echo_privilege, [:user], :result => false)
     end
 
@@ -67,6 +67,10 @@ describe AccessSchema::Schema do
 
       it "fails for user" do
         @schema.should_not be_allow("Review", :update, [:user])
+      end
+
+      it "fails for role 'none'" do
+        @schema.should_not be_allow("Review", :update, [:none])
       end
 
       it "passes for admin and user" do
