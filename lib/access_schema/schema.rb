@@ -105,9 +105,14 @@ module AccessSchema
 
       roles_checks = roles.map do |role|
         privilege.allow?([role]) do |expectation|
-          @asserts[expectation.name].check?(expectation.options.merge(options)).tap do |result|
+
+          assert = @asserts[expectation.name]
+          check_options = expectation.options.merge(options)
+
+          assert.check?(check_options).tap do |result|
             failed_asserts[role] << expectation.name unless result
           end
+
         end
       end
 
