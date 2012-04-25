@@ -45,7 +45,7 @@ module AccessSchema
       when String, Symbol
         resource = args[0].to_s
       else
-        resource = args[0].class.name.to_s
+        resource = args[0].class.model_name.to_s
         options.merge!(:subject => args[0])
       end
 
