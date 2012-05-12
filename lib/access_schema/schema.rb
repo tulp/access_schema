@@ -37,27 +37,47 @@ module AccessSchema
 
     def normalize_args(args)
 
-      options = args.last.is_a?(Hash) ? args.pop : {}
       privilege =  args[1].to_s
-      roles = args[2]
+      options = args.last.is_a?(Hash) ? args.pop : {}
 
-      case args[0]
-      when String, Symbol
-        resource = args[0].to_s
-      else
-        resource = args[0].class.model_name.to_s
-        options.merge!(:subject => args[0])
+      unless subject_by_name?(args[0])
+        options.merge! :subject => args[0]
       end
 
-      roles = calculate_roles(roles, options)
+      roles = calculate_roles(args[2], options)
 
       if (self.roles & roles).empty?
         raise InvalidRolesError.new(:roles => roles)
       end
 
-      roles = sort_roles(roles)
+      [
+        resource_name(args[0]),
+        privilege,
+        sort_roles(roles),
+        options
+      ]
+    end
 
-      [resource, privilege, roles, options]
+    def resource_name(obj)
+      if subject_by_name?(obj)
+        obj.to_s
+      else
+        klass = obj.class
+        if klass.respond_to?(:model_name)
+          klass.model_name
+        else
+          klass.name
+        end
+      end
+    end
+
+    def subject_by_name?(obj)
+      case obj
+      when String, Symbol
+        true
+      else
+        false
+      end
     end
 
     def calculate_roles(roles, check_options)
