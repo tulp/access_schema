@@ -107,6 +107,21 @@ describe AccessSchema::Schema do
 
     end
 
+    it "uses subject from options hash if present" do
+
+      @passed_options = nil
+      roles_calculator = proc do |options|
+        @passed_options = options
+        [:admin]
+      end
+      subject = Review.new
+      subject_new = Review.new
+      @schema.allow? subject, :update, roles_calculator, :subject => subject_new
+      @passed_options.should be
+      @passed_options[:subject].should == subject_new
+
+    end
+
     it "passes a copy of options hash" do
 
       @passed_options = {:option1 => :value1}

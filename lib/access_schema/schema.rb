@@ -40,7 +40,7 @@ module AccessSchema
       privilege =  args[1].to_s
       options = args.last.is_a?(Hash) ? args.pop : {}
 
-      unless subject_by_name?(args[0])
+      if !subject_by_name?(args[0]) && options[:subject].nil?
         options.merge! :subject => args[0]
       end
 
