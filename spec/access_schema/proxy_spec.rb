@@ -17,17 +17,17 @@ describe AccessSchema::Proxy do
     end
 
     it "allows to not specify roles for schema calls" do
-      @schema.allow?("Review", :mark_featured).should be_true
+      @schema.allow?("TestResource", :mark_featured).should be_true
     end
 
     it "but it accepts roles too" do
-      @schema.allow?("Review", :mark_featured, :flower).should be_true
-      @schema.allow?("Review", :mark_featured, :none).should be_false
+      @schema.allow?("TestResource", :mark_featured, :flower).should be_true
+      @schema.allow?("TestResource", :mark_featured, :none).should be_false
     end
 
     it "passes options to schema" do
-      @proxy.should_receive(:allow?).with("Review", :mark_featured, [:flower], {:user_id => 1})
-      @schema.allow?("Review", :mark_featured)
+      @proxy.should_receive(:allow?).with("TestResource", :mark_featured, [:flower], {:user_id => 1})
+      @schema.allow?("TestResource", :mark_featured)
     end
 
   end

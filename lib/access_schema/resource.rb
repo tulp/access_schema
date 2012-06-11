@@ -1,9 +1,11 @@
 module AccessSchema
   class Resource
     attr_reader :name
+    attr_reader :schema
 
-    def initialize(name)
-      @name = name
+    def initialize(schema, name)
+      @schema = schema
+      @name = name.to_s
       @privileges = {}
     end
 

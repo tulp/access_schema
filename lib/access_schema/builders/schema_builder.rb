@@ -1,16 +1,18 @@
 module AccessSchema
   class SchemaBuilder < BasicBuilder
 
-    def self.build(&block)
-      builder = new(Schema.new)
-      builder.instance_eval(&block)
-      Proxy.new(builder.schema)
-    end
+    class << self
+      def build(&block)
+        builder = new(Schema.new)
+        builder.instance_eval(&block)
+        Proxy.new(builder.schema)
+      end
 
-    def self.build_file(filename)
-      builder = new(Schema.new)
-      builder.instance_eval(File.read(filename))
-      Proxy.new(builder.schema)
+      def build_file(filename)
+        builder = new(Schema.new)
+        builder.instance_eval(File.read(filename))
+        Proxy.new(builder.schema)
+      end
     end
 
     def roles(&block)
@@ -24,10 +26,13 @@ module AccessSchema
     end
 
     def resource(name, &block)
-      resource = Resource.new(name.to_s)
+      resource = schema.build_resource(name)
       builder = ResourceBuilder.new(resource)
       builder.instance_eval(&block)
-      schema.add_resource(resource)
+    end
+
+    def schema
+      subject
     end
 
   end

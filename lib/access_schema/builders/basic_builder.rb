@@ -1,10 +1,10 @@
 module AccessSchema
   class BasicBuilder
 
-    attr_reader :schema
+    attr_reader :subject
 
-    def initialize(schema)
-      @schema = schema
+    def initialize(subject)
+      @subject = subject
     end
 
   end

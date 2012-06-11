@@ -36,45 +36,68 @@ describe AccessSchema::Schema do
 
     it "raises exception on invalid role" do
       lambda {
-        @schema.allow? "Review", :mark_featured, :invalid
+        @schema.allow? "TestResource", :mark_featured, :invalid
       }.should raise_error(AccessSchema::InvalidRolesError)
 
       lambda {
-        @schema.allow? "Review", :mark_featured
+        @schema.allow? "TestResource", :mark_featured
       }.should raise_error(AccessSchema::InvalidRolesError)
     end
 
     it "raises exception on invalid feature"
 
     it "fails if no roles and asserts are specified in privilege definition" do
-      @schema.should_not be_allow("Review", :view, [:user])
+      @schema.should_not be_allow("TestResource", :view, [:user])
     end
 
-    it "does not checks assert if no roles specified in assert definition" do
-      @schema.should_not be_allow("Review", :echo_privilege, [:user], :result => true)
-      @schema.should_not be_allow("Review", :echo_privilege, [:user], :result => false)
+    it "checks assert if no roles specified in assert definition" do
+      @schema.should be_allow("TestResource", :echo_privilege, [:user], :result => true)
+      @schema.should_not be_allow("TestResource", :echo_privilege, [:user], :result => false)
+    end
+
+  end
+
+  describe "multiple expectations for pass" do
+
+    before do
+      @resource = TestResource.new
+      @resource.stub(:bananas_count) { @bananas_count }
+      @resource.stub(:apples_count) { @apples_count }
+    end
+
+    it "passess if all asserts passed" do
+      @bananas_count = 1
+      @apples_count = 3
+      @schema.should be_allow(@resource, :mix, [:bouquet] )
+    end
+
+    it "fails if one of assets failed" do
+      @bananas_count = 0
+      @apples_count = 3
+      @schema.should_not be_allow(@resource, :mix, [:bouquet] )
+
     end
 
   end
 
   describe "privilege union for multiple roles" do
 
-    context "when checking privilege :update for Review in example schema" do
+    context "when checking privilege :update for TestResource in example schema" do
 
       it "passes for admin" do
-        @schema.should be_allow("Review", :update, [:admin])
+        @schema.should be_allow("TestResource", :update, [:admin])
       end
 
       it "fails for user" do
-        @schema.should_not be_allow("Review", :update, [:user])
+        @schema.should_not be_allow("TestResource", :update, [:user])
       end
 
       it "fails for role 'none'" do
-        @schema.should_not be_allow("Review", :update, [:none])
+        @schema.should_not be_allow("TestResource", :update, [:none])
       end
 
       it "passes for admin and user" do
-        @schema.should be_allow("Review", :update, [:admin, :user])
+        @schema.should be_allow("TestResource", :update, [:admin, :user])
       end
 
     end
@@ -87,7 +110,7 @@ describe AccessSchema::Schema do
 
       lambda {
         roles_calculator = proc { [:admin] }
-        @schema.allow? "Review", :update, roles_calculator
+        @schema.allow? "TestResource", :update, roles_calculator
       }.should_not raise_error
 
     end
@@ -99,7 +122,7 @@ describe AccessSchema::Schema do
         @passed_options = options
         [:admin]
       end
-      subject = Review.new
+      subject = TestResource.new
       @schema.allow? subject, :update, roles_calculator, :option1 => :value1
       @passed_options.should be
       @passed_options[:subject].should == subject
@@ -114,8 +137,8 @@ describe AccessSchema::Schema do
         @passed_options = options
         [:admin]
       end
-      subject = Review.new
-      subject_new = Review.new
+      subject = TestResource.new
+      subject_new = TestResource.new
       @schema.allow? subject, :update, roles_calculator, :subject => subject_new
       @passed_options.should be
       @passed_options[:subject].should == subject_new
@@ -130,7 +153,7 @@ describe AccessSchema::Schema do
         [:admin]
       end
 
-      @schema.allow? "Review", :update, roles_calculator
+      @schema.allow? "TestResource", :update, roles_calculator
 
       @passed_options[:option1].should == :value1
 
@@ -140,7 +163,7 @@ describe AccessSchema::Schema do
 
       lambda {
         roles_calculator = proc { :admin }
-        @schema.allow? "Review", :update, roles_calculator
+        @schema.allow? "TestResource", :update, roles_calculator
       }.should raise_error(AccessSchema::InvalidRolesError)
 
     end
@@ -162,14 +185,16 @@ describe AccessSchema::Schema do
 
     it "logs check arguments with debug level" do
       @logger.log_only_level = "debug"
-      @schema.allow? "Review", :mark_featured, :flower
-      @logger.output.should == "AccessSchema: check PASSED: {:resource=>\"Review\", :privilege=>\"mark_featured\", :roles=>[\"flower\"], :options=>{}}"
+      @schema.allow? "TestResource", :mark_featured, :flower
+      pattern = %r/AccessSchema: check PASSED: .+TestResource.+mark_featured.+flower.+AccessSchema::PrivilegeCheckResult/
+      @logger.output.should match(pattern)
     end
 
     it "logs check fail with info level" do
       @logger.log_only_level = "info"
-      @schema.allow? "Review", :mark_featured, :none
-      @logger.output.should == "AccessSchema: check FAILED: {:resource=>\"Review\", :privilege=>\"mark_featured\", :roles=>[\"none\"], :options=>{}, :failed_asserts=>{}}"
+      @schema.allow? "TestResource", :mark_featured, :none
+      pattern = %r/AccessSchema: check FAILED: .+TestResource.+mark_featured.+none.+AccessSchema::PrivilegeCheckResult/
+      @logger.output.should match(pattern)
     end
   end
 

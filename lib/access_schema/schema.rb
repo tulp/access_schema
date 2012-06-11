@@ -9,16 +9,22 @@ module AccessSchema
       @resources = {}
     end
 
+    def build_assert(name, vars, &block)
+      assert = Assert.new(self, name, vars, &block)
+      @asserts[assert.name] = assert
+    end
+
+    def build_resource(name)
+      resource = Resource.new(self, name)
+      @resources[resource.name] = resource
+    end
+
     def add_role(role)
       @roles << role
     end
 
-    def add_assert(assert)
-      @asserts[assert.name] = assert
-    end
-
-    def add_resource(resource)
-      @resources[resource.name] = resource
+    def assert_by_name(name)
+      @asserts[name.to_s]
     end
 
     def allow?(*args)
@@ -31,6 +37,10 @@ module AccessSchema
 
     def require!(*args)
       check!(*normalize_args(args))
+    end
+
+    def to_s
+      "#{self.class.name}:#{object_id} roles: #{roles} asserts: #{@asserts.keys} resources: #{@resources.keys}"
     end
 
     private
@@ -109,53 +119,48 @@ module AccessSchema
       resouce_name = resource_name.to_s
       privilege_name = privilege_name.to_s
 
-      resource = @resources[resource_name]
+      resource = resource_by_name!(resource_name)
+      privilege = privilege_by_name!(resource, privilege_name)
 
-      if resource.nil?
-        raise NoResourceError.new(:resource => resource_name)
-      end
-
-      privilege = resource.get_privilege(privilege_name)
-
-      if privilege.nil?
-        raise NoPrivilegeError.new(:resource => resource_name, :privilege => privilege_name)
-      end
-
-      failed_asserts = Hash.new{|h, k| h[k] = []}
-
-      roles_checks = roles.map do |role|
-        privilege.allow?([role]) do |expectation|
-
-          assert = @asserts[expectation.name]
-          check_options = expectation.options.merge(options)
-
-          assert.check?(check_options).tap do |result|
-            failed_asserts[role] << expectation.name unless result
-          end
-
-        end
+      results = roles.inject({}) do |h, role|
+        h[role] = privilege.check([role], options)
+        h
       end
 
       log_payload = {
         :resource => resource_name,
         :privilege => privilege_name,
         :roles => roles,
-        :options => options
+        :options => options,
+        :results => results
       }
 
-      unless roles_checks.any?
-        log_payload[:failed_asserts] = failed_asserts
-        logger.info{ "check FAILED: #{log_payload.inspect}" }
-        raise NotAllowedError.new(log_payload)
-      else
-        logger.debug{ "check PASSED: #{log_payload.inspect}" }
-        true
+      pass = roles.any? do |role|
+        rr = results[role]
+        rr && rr.positive?
       end
 
+      if pass
+        logger.debug{ "check PASSED: #{log_payload.inspect}" }
+        true
+      else
+        logger.info{ "check FAILED: #{log_payload.inspect}" }
+        raise NotAllowedError.new(log_payload)
+      end
+
+    end
+
+    def resource_by_name!(name)
+      @resources[name] or raise NoResourceError.new(:resource => name)
+    end
+
+    def privilege_by_name!(resource, name)
+      resource.get_privilege(name) or raise NoPrivilegeError.new(:resource => resource_name, :privilege => name)
     end
 
     def logger
       AccessSchema.config.logger
     end
+
   end
 end
