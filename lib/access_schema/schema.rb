@@ -145,10 +145,10 @@ module AccessSchema
 
       unless roles_checks.any?
         log_payload[:failed_asserts] = failed_asserts
-        logger.info{ "check FAILED: #{log_payload.inspect}" }
+        #logger.info{ "check FAILED: #{log_payload.inspect}" }
         raise NotAllowedError.new(log_payload)
       else
-        logger.debug{ "check PASSED: #{log_payload.inspect}" }
+        #logger.debug{ "check PASSED: #{log_payload.inspect}" }
         true
       end
 
